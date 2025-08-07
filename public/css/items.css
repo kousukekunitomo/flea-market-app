@@ -1,0 +1,84 @@
+/* ページ全体 */
+.item-page {
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.item-list-wrapper {
+    margin-top: 24px;
+    margin-left: 40px;
+    /* ← ここで右寄せに調整 */
+}
+
+/* タブメニュー周りの余白 */
+/* タブ部分にのみ左右余白 */
+.tab-menu-container {
+    padding: 24px 120px 12px;
+}
+
+/* タブメニュー本体 */
+.tab-menu {
+    display: flex;
+    gap: 20px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+/* タブ内リンク */
+.tab-menu li a {
+    text-decoration: none;
+    padding: 8px 0;
+    font-weight: bold;
+    color: #555;
+}
+
+/* アクティブなタブ */
+.tab-menu li.active a {
+    color: #F15B6C;
+    border-bottom: none;
+    /* 下線なし */
+}
+
+/* グレーの区切り線（画面端まで） */
+.tab-divider {
+    width: 100vw;
+    height: 4px;
+    background-color: #ccc;
+    margin: 0 calc(-1 * ((100vw - 100%) / 2)) 32px;
+}
+
+/* 商品一覧エリア */
+.item-list {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    padding-left: 0;
+    /* 左詰めにする */
+}
+
+/* 各商品カード */
+.item-card {
+    width: 150px;
+    text-align: center;
+}
+
+/* 商品画像エリア */
+.item-image {
+    background-color: #ccc;
+    width: 150px;
+    height: 150px;
+    margin-bottom: 8px;
+}
+
+/* 商品画像本体 */
+.item-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* 商品名 */
+.item-name {
+    font-size: 14px;
+}

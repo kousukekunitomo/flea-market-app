@@ -1,0 +1,59 @@
+/* ログイン画面と同様の構造 */
+.header {
+    width: 100%;
+    background-color: #000;
+    padding: 10px 40px;
+    box-sizing: border-box;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* ロゴ */
+.logo img {
+    height: 24px;
+    display: block;
+}
+
+/* 検索フォーム中央 */
+.search-form {
+    flex: 1;
+    text-align: center;
+}
+
+.search-form input {
+    width: 300px;
+    padding: 6px 10px;
+    border-radius: 4px;
+    border: none;
+    font-size: 14px;
+}
+
+/* メニュー右側 */
+.nav-menu {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.nav-link,
+.nav-button {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+/* 出品ボタン */
+.nav-button.white {
+    background-color: #fff;
+    color: #000;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-weight: bold;
+    text-decoration: none;
+    display: inline-block; 
+}
