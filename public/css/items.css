@@ -1,84 +1,165 @@
-/* ページ全体 */
+/* ページ幅（.main の中で使う想定） */
 .item-page {
-    padding: 0;
-    box-sizing: border-box;
+    max-width: 1540px;
+    margin: 0 auto;
 }
 
-.item-list-wrapper {
-    margin-top: 24px;
-    margin-left: 40px;
-    /* ← ここで右寄せに調整 */
-}
-
-/* タブメニュー周りの余白 */
-/* タブ部分にのみ左右余白 */
-.tab-menu-container {
-    padding: 24px 120px 12px;
-}
-
-/* タブメニュー本体 */
+/* --- タブ --- */
 .tab-menu {
     display: flex;
-    gap: 20px;
+    gap: 24px;
     list-style: none;
-    margin: 0;
     padding: 0;
+    margin: 16px 0 0;
 }
 
-/* タブ内リンク */
-.tab-menu li a {
+/* 一覧カード上の「いいね」UIを非表示 */
+.item-card .item-like,
+.item-card .like-btn {
+    display: none !important;
+}
+
+.tab-menu li {
+    margin: 0;
+}
+
+.tab-menu a {
+    display: inline-block;
     text-decoration: none;
-    padding: 8px 0;
-    font-weight: bold;
     color: #555;
+    font-weight: 700;
+    padding: 8px 0;
+    position: relative;
 }
 
-/* アクティブなタブ */
-.tab-menu li.active a {
-    color: #F15B6C;
-    border-bottom: none;
-    /* 下線なし */
+.tab-menu .active a {
+    color: #ff6b6b;
 }
 
-/* グレーの区切り線（画面端まで） */
+.tab-menu .active a::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -12px;
+    width: 100%;
+    height: 3px;
+    background: #ff6b6b;
+    border-radius: 2px;
+}
+
+/* 画面端までの薄い線（.main の padding を打ち消す） */
 .tab-divider {
-    width: 100vw;
-    height: 4px;
-    background-color: #ccc;
-    margin: 0 calc(-1 * ((100vw - 100%) / 2)) 32px;
+    height: 1px;
+    background: #ddd;
+    margin: 12px -24px 0;
+    /* ← 24px に修正 */
 }
 
-/* 商品一覧エリア */
+/* --- 商品グリッド：4列固定で折り返し --- */
 .item-list {
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
-    padding-left: 0;
-    /* 左詰めにする */
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(32px, 3.4vw, 56px);
+    margin-top: 24px;
 }
 
-/* 各商品カード */
 .item-card {
-    width: 150px;
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    /* いいねボタンの絶対配置用 */
 }
 
-/* 商品画像エリア */
+/* 正方形サムネイル */
 .item-image {
-    background-color: #ccc;
-    width: 150px;
-    height: 150px;
-    margin-bottom: 8px;
+    width: 100%;
+    aspect-ratio: 1/1;
+    overflow: hidden;
+    background: #f5f5f5;
+    border-radius: 8px;
 }
 
-/* 商品画像本体 */
 .item-image img {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
 
-/* 商品名 */
-.item-name {
-    font-size: 14px;
+/* テキスト */
+.item-info {
+    padding-top: 10px;
 }
+
+.item-name {
+    margin: 6px 0 8px;
+    font-weight: 700;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 2.6em;
+}
+
+.item-price {
+    font-weight: 700;
+}
+
+/* カード全体をリンク化 */
+.card-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    border-radius: 10px;
+}
+
+.card-link:hover {
+    opacity: 0.98;
+}
+
+/* いいねボタン（カード右上） */
+.item-like {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 3;
+}
+
+.like-btn {
+    border: 1px solid #f66;
+    background: #fff;
+    color: #f66;
+    border-radius: 9999px;
+    padding: 6px 10px;
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.like-btn.is-liked {
+    background: #ffefef;
+}
+
+.like-btn:hover {
+    background: #ffe8e8;
+}
+
+/* レスポンシブ */
+@media (max-width:1200px) {
+    .item-list {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width:900px) {
+    .item-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width:560px) {
+    .item-list {
+        grid-template-columns: 1fr;
+    }
+}
+

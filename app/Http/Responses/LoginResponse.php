@@ -8,7 +8,8 @@ class LoginResponse implements LoginResponseContract
 {
     public function toResponse($request)
     {
-        // ✅ redirect()->intended() ではなく、明示的に商品一覧へ
-        return redirect()->route('items.index');
+        // セッションに url.intended があればそこへ。
+        // 無ければ マイリストタブ にフォールバック
+        return redirect()->intended(route('items.index', ['tab' => 'mylist']));
     }
 }

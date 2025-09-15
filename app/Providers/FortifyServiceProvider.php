@@ -3,48 +3,55 @@
 namespace App\Providers;
 
 use App\Actions\Fortify\CreateNewUser;
-use Illuminate\Support\ServiceProvider;
-use Laravel\Fortify\Fortify;
-use App\Models\User;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Http\Request;
-use Laravel\Fortify\Contracts\CreatesNewUsers;
-use Illuminate\Validation\ValidationException;
 use App\Http\Requests\LoginRequest;
 use App\Http\Responses\LoginResponse;
-use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
+use App\Http\Responses\LogoutResponse;
 use App\Http\Responses\RegisterResponse;
-use Laravel\Fortify\Contracts\RegisterResponse as RegisterResponseContract;
+use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\ValidationException;
+use Laravel\Fortify\Contracts\CreatesNewUsers;
+use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
+use Laravel\Fortify\Contracts\LogoutResponse as LogoutResponseContract;
+use Laravel\Fortify\Contracts\RegisterResponse as RegisterResponseContract;
+use Laravel\Fortify\Fortify;
 
 class FortifyServiceProvider extends ServiceProvider
 {
-    public function register()
+    public function register(): void
     {
-        // Fortifyのユーザー登録処理とレスポンスをバインド
+        // Contract ←→ 実装 をバインド
         $this->app->singleton(CreatesNewUsers::class, CreateNewUser::class);
-        $this->app->singleton(LoginResponseContract::class, LoginResponse::class);
-        $this->app->singleton(RegisterResponseContract::class, RegisterResponse::class);
+        $this->app->singleton(LoginResponseContract::class,     LoginResponse::class);
+        $this->app->singleton(RegisterResponseContract::class,  RegisterResponse::class);
+        $this->app->singleton(LogoutResponseContract::class,    LogoutResponse::class);
     }
 
-    public function boot()
+    public function boot(): void
     {
-        // ログイン・登録ページを表示するViewを定義
+        // ビュー
         Fortify::loginView(fn () => view('auth.login'));
         Fortify::registerView(fn () => view('auth.register'));
 
-        // ログインのレートリミット制限（5回/分）
+        // ログインのレート制限（5回/分）
         RateLimiter::for('login', function (Request $request) {
-            return Limit::perMinute(5)->by($request->email.$request->ip());
+            return Limit::perMinute(5)->by(($request->email ?? 'guest').'|'.$request->ip());
         });
 
-        // カスタムログイン処理（LoginRequest を使用してバリデーション）
+        // ログイン処理（LoginRequest のルール/メッセージを再利用）
         Fortify::authenticateUsing(function (Request $request) {
-            // LoginRequest のバリデーションを適用（messages() も効く）
-            $validated = app(LoginRequest::class)->validate();
+            $form       = app(LoginRequest::class);
+            $rules      = $form->rules();
+            $messages   = method_exists($form, 'messages')   ? $form->messages()   : [];
+            $attributes = method_exists($form, 'attributes') ? $form->attributes() : [];
 
-            // ユーザー検索と認証チェック
+            $validated = Validator::make($request->all(), $rules, $messages, $attributes)->validate();
+
             $user = User::where('email', $validated['email'])->first();
 
             if (! $user || ! Hash::check($validated['password'], $user->password)) {
@@ -52,7 +59,6 @@ class FortifyServiceProvider extends ServiceProvider
                     'email' => ['ログイン情報が登録されていません'],
                 ]);
             }
-
             return $user;
         });
     }

@@ -39,21 +39,31 @@
 
 
 
+<h3 class="section-heading">商品の詳細</h3>
 
-
-        {{-- カテゴリ（単一選択） --}}
+{{-- カテゴリ（複数選択） --}}
 <div class="form-section">
-    <label class="form-label">カテゴリー</label>
-    <div class="category-buttons" id="category-container">
-        @foreach ($categories as $category)
-            <label class="category-label">
-                <input type="radio" name="category_id" value="{{ $category->id }}"
-                    {{ old('category_id') == $category->id ? 'checked' : '' }}>
-                {{ $category->name }}
-            </label>
-        @endforeach
-    </div>
+  <label class="form-label">カテゴリー</label>
+  <div class="category-buttons" id="category-container">
+    @php
+      $oldIds = old('category_ids', []);  // ← 選択保持用
+    @endphp
+    @foreach ($categories as $category)
+      <label class="category-label">
+        <input
+          type="checkbox"
+          name="category_ids[]"
+          value="{{ $category->id }}"
+          {{ in_array($category->id, $oldIds, true) ? 'checked' : '' }}
+        >
+        {{ $category->name }}
+      </label>
+    @endforeach
+  </div>
+  @error('category_ids')   <div class="error-message">{{ $message }}</div> @enderror
+  @error('category_ids.*') <div class="error-message">{{ $message }}</div> @enderror
 </div>
+
 
         {{-- 商品の状態 --}}
         <div class="form-section">
@@ -124,29 +134,20 @@
             preview.src = '';
         }
     }
-</script>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const radios = document.querySelectorAll('input[name="category_id"]');
-        let selected = null;
 
-        radios.forEach(radio => {
-            radio.addEventListener('click', function () {
-                if (selected === this) {
-                    this.checked = false;
-                    selected = null;
-                } else {
-                    selected = this;
-                }
-            });
-
-            // ページロード時に old('category_id') がある場合
-            if (radio.checked) {
-                selected = radio;
-            }
-        });
+  document.addEventListener('DOMContentLoaded', () => {
+    const chips = document.querySelectorAll('.category-label input[type="checkbox"]');
+    chips.forEach(cb => {
+      const label = cb.closest('.category-label');
+      const sync = () => label.classList.toggle('selected', cb.checked);
+      cb.addEventListener('change', sync);
+      // 初期状態（old() の復元など）
+      sync();
     });
+  });
 </script>
+
+
 @endsection
 
 

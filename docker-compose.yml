@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   app:
     build:
@@ -8,6 +6,7 @@ services:
     container_name: flea-market-app
     volumes:
       - .:/var/www
+      - ./docker/php/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini:ro  # ← 追加（PHPのアップロード上限）
     depends_on:
       - db
     networks:
@@ -35,17 +34,17 @@ services:
       MYSQL_USER: laravel_user
       MYSQL_PASSWORD: secret
     ports:
-      - "3306:3306"
+      - "3307:3306"   # ← ホスト側3307に変更（衝突回避）。不要なら ports を消してもOK
     volumes:
       - dbdata:/var/lib/mysql
     networks:
       - flea-net
 
   phpmyadmin:
-    image: phpmyadmin/phpmyadmin     # ← 正しい phpMyAdmin イメージ
-    container_name: flea-market-pma  # ← 一意な名前に変更
+    image: phpmyadmin/phpmyadmin
+    container_name: flea-market-pma
     environment:
-      PMA_HOST: db                   # ← dbサービス名に接続
+      PMA_HOST: db
       PMA_USER: laravel_user
       PMA_PASSWORD: secret
     ports:
