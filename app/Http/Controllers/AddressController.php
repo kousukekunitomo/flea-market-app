@@ -6,41 +6,35 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use App\Http\Requests\UpdateAddressRequest;
-use App\Models\Item; // 購入画面へ戻すときの存在確認に使用（不要なら削除OK）
+use App\Models\Item;
 
 class AddressController extends Controller
 {
-    public function edit(Request $request): View
+    /** /items/{item}/address/edit */
+    public function edit(Request $request, Item $item): View
     {
         $user = auth()->user();
         $profile = $user->profile()->firstOrCreate([]);
 
-        // 購入画面から来た場合に保持（?item=ID）
-        $itemId = $request->query('item');
-
-        return view('address.edit', compact('profile', 'itemId'));
+        // ビュー側で購入画面に戻すために item を渡す（hiddenで使う）
+        return view('address.edit', [
+            'profile' => $profile,
+            'item'    => $item,
+        ]);
     }
 
-    public function update(UpdateAddressRequest $request): \Illuminate\Http\RedirectResponse
-{
-    $user = auth()->user();
+    /** /items/{item}/address */
+    public function update(UpdateAddressRequest $request, Item $item): RedirectResponse
+    {
+        $user = auth()->user();
+        $user->profile()->updateOrCreate(
+            ['user_id' => $user->id],
+            $request->validated()
+        );
 
-    $user->profile()->updateOrCreate(
-        ['user_id' => $user->id],
-        $request->validated()
-    );
-
-    // hidden の item があれば購入ページへ戻す
-    if ($request->filled('item')) {
+        // 住所更新後は購入ページへ戻す
         return redirect()
-            ->route('purchase.show', ['item' => $request->input('item')])
+            ->route('purchase.show', $item)
             ->with('status', '配送先を更新しました。');
     }
-
-    // 単独アクセス時は編集画面に留まる（お好みでマイページ等に変更可）
-    return redirect()
-        ->route('address.edit')
-        ->with('status', '配送先を更新しました。');
-}
-
 }

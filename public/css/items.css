@@ -13,12 +13,6 @@
     margin: 16px 0 0;
 }
 
-/* 一覧カード上の「いいね」UIを非表示 */
-.item-card .item-like,
-.item-card .like-btn {
-    display: none !important;
-}
-
 .tab-menu li {
     margin: 0;
 }
@@ -52,7 +46,6 @@
     height: 1px;
     background: #ddd;
     margin: 12px -24px 0;
-    /* ← 24px に修正 */
 }
 
 /* --- 商品グリッド：4列固定で折り返し --- */
@@ -63,26 +56,32 @@
     margin-top: 24px;
 }
 
+/* カード */
 .item-card {
     display: flex;
     flex-direction: column;
     position: relative;
-    /* いいねボタンの絶対配置用 */
+    /* リボン等の重ね表示用 */
+    text-decoration: none;
+    color: inherit;
 }
 
 /* 正方形サムネイル */
 .item-image {
+    position: relative;
+    /* リボンの位置基準 */
     width: 100%;
-    aspect-ratio: 1/1;
+    aspect-ratio: 1 / 1;
     overflow: hidden;
     background: #f5f5f5;
-    border-radius: 8px;
+    border-radius: 12px;
 }
 
 .item-image img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    display: block;
 }
 
 /* テキスト */
@@ -114,34 +113,13 @@
 }
 
 .card-link:hover {
-    opacity: 0.98;
+    opacity: .98;
 }
 
-/* いいねボタン（カード右上） */
-.item-like {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    z-index: 3;
-}
-
-.like-btn {
-    border: 1px solid #f66;
-    background: #fff;
-    color: #f66;
-    border-radius: 9999px;
-    padding: 6px 10px;
-    font-size: 13px;
-    line-height: 1;
-    cursor: pointer;
-}
-
-.like-btn.is-liked {
-    background: #ffefef;
-}
-
-.like-btn:hover {
-    background: #ffe8e8;
+/* いいねUI（一覧では非表示） */
+.item-card .item-like,
+.item-card .like-btn {
+    display: none !important;
 }
 
 /* レスポンシブ */
@@ -163,3 +141,76 @@
     }
 }
 
+/* ===== 旧・四角い SOLD バッジは使わない場合は無効化（任意） ===== */
+/* .item-image .sold-badge { display: none !important; } */
+
+/* ===== 左上三角 SOLD リボン（一覧用） ===== */
+.sold-corner {
+    --size: 64px;
+    /* 一覧は少し小さめ。56〜72でお好み調整OK */
+    --color: #ff2d55;
+    position: absolute;
+    inset: 0 auto auto 0;
+    /* top:0; left:0 */
+    width: var(--size);
+    height: var(--size);
+    pointer-events: none;
+    /* クリックの邪魔をしない */
+}
+
+/* 三角本体 */
+.sold-corner::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    border-top: var(--size) solid var(--color);
+    border-right: var(--size) solid transparent;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, .03) inset;
+}
+
+/* SOLD 文字（あなたの最終調整値） */
+.sold-corner::after {
+    content: "SOLD";
+    position: absolute;
+    color: #fff;
+    font-weight: 800;
+    letter-spacing: .06em;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, .2);
+    transform: rotate(-45deg);
+    transform-origin: 0 0;
+
+    top: calc(var(--size) * 0.45);
+    left: calc(var(--size) * 0.03);
+    width: calc(var(--size) * 0.4);
+    text-align: left;
+    /* 見切れづらく中央に見える */
+    line-height: 1;
+
+    font-size: clamp(9px, calc(var(--size) * 0.22), 14px);
+}
+
+/* サイズ切り替え用（必要なら） */
+.sold-corner--card {
+    --size: 64px;
+}
+
+/* 一覧 */
+.sold-corner--detail {
+    --size: 86px;
+}
+
+/* 詳細（流用時） */
+
+/* モバイル微調整（任意） */
+@media (max-width: 480px) {
+    .sold-corner {
+        --size: 56px;
+    }
+
+    .sold-corner::after {
+        top: calc(var(--size) * 0.42);
+        left: calc(var(--size) * 0.05);
+        width: calc(var(--size) * 0.88);
+    }
+}

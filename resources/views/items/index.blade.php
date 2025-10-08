@@ -1,3 +1,4 @@
+{{-- resources/views/items/index.blade.php --}}
 @extends('layouts.app')
 
 @php
@@ -7,7 +8,8 @@
 @endphp
 
 @section('css')
-<link rel="stylesheet" href="{{ asset('css/items.css') }}">
+@php $ver = filemtime(public_path('css/items.css')); @endphp
+  <link rel="stylesheet" href="{{ asset('css/items.css') }}?v={{ $ver }}">
 @endsection
 
 @section('content')
@@ -34,41 +36,36 @@
       <div class="item-list">
         @foreach ($items as $item)
           <div class="item-card">
-            {{-- 画像＋テキストを丸ごとリンク --}}
+            {{-- 画像＋商品名を丸ごとリンク --}}
             <a href="{{ route('items.show', $item) }}" class="card-link">
               <div class="item-image">
                 @php
                   if (!empty($item->image_path) && Str::startsWith($item->image_path, ['http://','https://'])) {
                       $src = $item->image_path;
                   } elseif (!empty($item->image_path)) {
-                      $src = asset('storage/' . $item->image_path);
+                      $src = asset('storage/' . ltrim($item->image_path, '/'));
                   } else {
                       $src = asset('images/placeholder.png');
                   }
                 @endphp
                 <img src="{{ $src }}" alt="{{ $item->name }}">
+
+                @if((int)($item->status ?? 1) === 0)
+                  {{-- 三角 SOLD リボン（一覧用サイズ） --}}
+                  <span class="sold-corner sold-corner--card" aria-label="SOLD"></span>
+                @endif
               </div>
 
               <div class="item-info">
                 <h3 class="item-name">{{ $item->name }}</h3>
-
               </div>
             </a>
           </div>
         @endforeach
       </div>
 
-      {{-- ページネーション（検索語＆タブを保持） --}}
-      <div style="margin-top:16px;">
-        {{ $items->appends(['tab' => $tab, 'q' => $keyword])->links() }}
-      </div>
-    @else
-      <p class="empty-state">
-        まだ商品がありません。
-        @if($keyword)
-          （「{{ $keyword }}」の検索結果は 0 件でした）
-        @endif
-      </p>
+      
+      
     @endif
   </div>
 

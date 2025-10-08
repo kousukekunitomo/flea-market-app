@@ -109,12 +109,7 @@
       preview.src = initialSrc;
       return;
     }
-    if (file.size > maxBytes) {
-      showClientError('画像ファイルのサイズは2MB以内で指定してください。');
-      input.value = '';
-      preview.src = initialSrc;
-      return;
-    }
+
 
     const reader = new FileReader();
     reader.onload = () => { preview.src = reader.result; };

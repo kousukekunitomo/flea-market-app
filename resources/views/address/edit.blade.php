@@ -13,13 +13,11 @@
   @endif
 
   <div class="address-card">
-    <form method="POST" action="{{ route('address.update') }}" class="address-form">
+    {{-- ★ $item を必ず渡す --}}
+    <form method="POST" action="{{ route('address.update', $item) }}" class="address-form">
       @csrf
-      @method('PATCH')
-
-      @if(request('item'))
-        <input type="hidden" name="item" value="{{ request('item') }}">
-      @endif
+      {{-- ★ ルートは POST のためメソッド偽装は不要 --}}
+      {{-- @method('PATCH') は削除 --}}
 
       <div class="form-rows">
         {{-- 郵便番号 --}}
@@ -30,9 +28,7 @@
               value="{{ old('postal_code', $profile->postal_code) }}"
               class="input @error('postal_code') is-error @enderror"
               placeholder="123-4567" inputmode="numeric" autocomplete="postal-code">
-            @error('postal_code')
-              <div class="error-text">{{ $message }}</div>
-            @enderror
+            @error('postal_code') <div class="error-text">{{ $message }}</div> @enderror
           </div>
         </div>
 
@@ -44,9 +40,7 @@
               value="{{ old('address', $profile->address) }}"
               class="input @error('address') is-error @enderror"
               placeholder="都道府県・市区町村・番地" autocomplete="street-address">
-            @error('address')
-              <div class="error-text">{{ $message }}</div>
-            @enderror
+            @error('address') <div class="error-text">{{ $message }}</div> @enderror
           </div>
         </div>
 
@@ -58,20 +52,15 @@
               value="{{ old('building_name', $profile->building_name) }}"
               class="input @error('building_name') is-error @enderror"
               placeholder="マンション名・部屋番号など">
-            @error('building_name')
-              <div class="error-text">{{ $message }}</div>
-            @enderror
+            @error('building_name') <div class="error-text">{{ $message }}</div> @enderror
           </div>
         </div>
 
-        {{-- ボタン（入力と同幅） --}}
         <div class="form-row">
           <div class="form-label"></div>
-          <div>
-            <button type="submit" class="btn-submit">更新する</button>
-          </div>
+          <div><button type="submit" class="btn-submit">更新する</button></div>
         </div>
-      </div><!-- /.form-rows -->
+      </div>
     </form>
   </div>
 </div>

@@ -1,69 +1,120 @@
-/* ログイン画面と同様の構造 */
+/* ===== 共通ヘッダ ===== */
 .header {
     width: 100%;
-    background-color: #000;
-    padding: 10px 40px;
+    background: #000;
+    color: #fff;
+    padding: 10px 24px;
     box-sizing: border-box;
 
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 16px;
+    /* 要素間の余白 */
+    flex-wrap: nowrap;
+    /* 通常は1行 */
 }
 
-/* ロゴ */
+/* ロゴは潰れないようにする */
+.logo {
+    flex: 0 0 auto;
+    min-width: 120px;
+}
+
 .logo img {
     height: 24px;
     display: block;
 }
 
-/* 検索フォーム中央 */
+/* 検索フォーム */
 .search-form {
-    flex: 1;
+    flex: 1 1 480px;
     text-align: center;
 }
 
 .search-form input {
-    width: 300px;
+    width: 100%;
+    /* 親幅に合わせる（固定300pxはやめる）*/
+    max-width: 520px;
+    /* 大きすぎない上限 */
     padding: 6px 10px;
-    border-radius: 4px;
     border: none;
+    border-radius: 4px;
     font-size: 14px;
+    box-sizing: border-box;
 }
 
-/* メニュー右側 */
+/* 右側メニュー */
 .nav-menu {
     display: flex;
     align-items: center;
     gap: 16px;
+    flex: 0 0 auto;
 }
 
-.nav-link,
-.nav-button {
+.nav-menu .nav-link,
+.nav-menu .nav-button {
     background: none;
     border: none;
     color: #fff;
     font-size: 14px;
+    text-decoration: none;
     cursor: pointer;
-    text-decoration: none;
-}
-
-/* 出品ボタン */
-.nav-button.white {
-    background-color: #fff;
-    color: #000;
-    padding: 6px 12px;
-    border-radius: 4px;
-    font-weight: bold;
-    text-decoration: none;
-    display: inline-block; 
-}
-
-.inline-form {
-    display: inline;
-    margin: 0;
-}
-
-.nav-menu .nav-button,
-.nav-menu .nav-link {
     white-space: nowrap;
+}
+
+.nav-button.white {
+    background: #fff;
+    color: #000;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 6px 16px;
+    font-weight: 700;
+    display: inline-block;
+}
+
+/* ===== レスポンシブ：740px以下で検索を2段目へ ===== */
+@media (max-width:740px) {
+    .header {
+        flex-wrap: wrap;
+        padding: 10px 16px;
+    }
+
+    /* 並び順を揃える（ロゴ→メニュー→検索） */
+    .logo {
+        order: 1;
+    }
+
+    .nav-menu {
+        order: 2;
+    }
+
+    .search-form {
+        order: 3;
+        flex-basis: 100%;
+        /* 横幅100%で2段目へ */
+        text-align: initial;
+        margin-top: 8px;
+    }
+
+    .search-form input {
+        max-width: none;
+        /* 上限解除して全幅 */
+        width: 100%;
+    }
+}
+
+/* さらに狭い端末の微調整（任意） */
+@media (max-width:420px) {
+    .logo img {
+        height: 20px;
+    }
+
+    .nav-menu {
+        gap: 10px;
+    }
+
+    .nav-menu .nav-link {
+        font-size: 13px;
+    }
 }

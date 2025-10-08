@@ -15,7 +15,7 @@ class ProfileRequest extends FormRequest
     {
         return [
             // 画像は任意。拡張子とサイズで制限（サーバ側で厳密チェック）
-            'profile_image' => 'nullable|file|mimes:jpeg,jpg,png|max:2048',
+            'profile_image' => 'nullable|file|mimes:jpeg,jpg,png',
 
             'name'          => 'required|string|max:20',
             'postal_code'   => ['required', 'regex:/^\d{3}-\d{4}$/'],
@@ -30,7 +30,7 @@ class ProfileRequest extends FormRequest
             // ★ ルールに合わせて key も file / mimes / max に
             'profile_image.file'  => 'ファイルを選択してください。',
             'profile_image.mimes' => '画像ファイルはjpegまたはpng形式で指定してください。',
-            'profile_image.max'   => '画像ファイルのサイズは2MB以内で指定してください。',
+         
 
             'name.required'       => 'ユーザー名を入力してください',
             'name.max'            => 'ユーザー名は20文字以内で入力してください',
