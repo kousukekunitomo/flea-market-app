@@ -1,36 +1,44 @@
 @extends('layouts.app')
 
+@php
+  // このページでは共通の全体エラー表示を抑止（重複防止）
+  $suppressGlobalErrors = true;
+
+  $comments    = $item->relationLoaded('comments') ? $item->comments : ($item->comments ?? collect());
+  $commentsCnt = $item->comments_count ?? $comments->count();
+  $likesCount  = $item->likes_count ?? (method_exists($item, 'likedBy') ? $item->likedBy()->count() : 0);
+  $liked       = isset($liked) ? $liked : (auth()->check() ? auth()->user()->hasLiked($item) : false);
+  $isMyItem    = auth()->check() && (int)$item->user_id === (int)auth()->id();
+  $isSold      = (int)($item->status ?? 1) === 0;
+@endphp
+
 @section('css')
   @php
     $cssPath = public_path('css/item-show.css');
-    $ver = file_exists($cssPath) ? filemtime($cssPath) : time();
+    $ver     = file_exists($cssPath) ? filemtime($cssPath) : time();
   @endphp
   <link rel="stylesheet" href="{{ asset('css/item-show.css') }}?v={{ $ver }}">
 @endsection
 
 @section('content')
-@php
-    $comments    = $item->relationLoaded('comments') ? $item->comments : ($item->comments ?? collect());
-    $commentsCnt = $item->comments_count ?? $comments->count();
-    $isMyItem    = auth()->check() && (int)$item->user_id === (int)auth()->id();
-    $likesCount  = $item->likes_count ?? (method_exists($item, 'likedBy') ? $item->likedBy()->count() : 0);
-    $liked       = isset($liked) ? $liked : (auth()->check() ? auth()->user()->hasLiked($item) : false);
-@endphp
-
 <div class="show-wrap">
   <div class="show-grid">
+
     {{-- 左：画像 --}}
     <div class="show-left">
       <div class="show-image">
-        <img
-          src="{{ $item->image_url }}"
-          alt="{{ $item->name }}"
-          onerror="this.src='{{ asset('images/placeholder.png') }}'">
+        <img src="{{ $item->image_url }}" alt="{{ $item->name }}"
+             onerror="this.src='{{ asset('images/placeholder.png') }}'">
+        @if($isSold)
+          {{-- 三角 SOLD リボン（クリックを邪魔しない） --}}
+          <span class="sold-corner" aria-label="SOLD"></span>
+        @endif
       </div>
     </div>
 
     {{-- 右：本文 --}}
     <div class="show-right">
+
       {{-- タイトル・ブランド --}}
       <h1 class="show-title">{{ $item->name }}</h1>
       @if(!empty($item->brand_name))
@@ -76,17 +84,25 @@
         </div>
       </div>
 
-      {{-- 購入ボタン --}}
+      {{-- 購入ボタン（type="button" で強制遷移） --}}
       <div class="show-cta">
-        @auth
-          @if($isMyItem)
-            <span class="buy-btn is-disabled">購入手続きへ</span>
-          @else
-            <a href="{{ route('purchase.show', $item) }}" class="buy-btn">購入手続きへ</a>
-          @endif
+        @if($isSold)
+          <span class="buy-btn is-disabled">SOLD</span>
         @else
-          <a href="{{ route('login', ['intended' => route('purchase.show', $item)]) }}" class="buy-btn">購入手続きへ</a>
-        @endauth
+          @auth
+            @if($isMyItem)
+              <span class="buy-btn is-disabled">出品者は購入できません</span>
+            @else
+              <button type="button"
+                      class="buy-btn"
+                      onclick="window.location.href='{{ route('purchase.show', $item) }}'">
+                購入手続きへ
+              </button>
+            @endif
+          @else
+            <a href="{{ route('login', ['intended' => route('purchase.show', $item)]) }}" class="buy-btn">購入手続きへ</a>
+          @endauth
+        @endif
       </div>
 
       {{-- 商品説明 --}}
@@ -116,47 +132,69 @@
         </dl>
       </div>
 
-      {{-- コメント --}}
-      <div class="show-section" id="comments">
-        <div class="sec-title">コメント（{{ $commentsCnt }}）</div>
 
-        <div class="comment-list">
-          @if($commentsCnt > 0)
-            @foreach($comments as $c)
-              @php
-                $avatar = optional($c->user->profile)->image_url ?? asset('images/placeholder.png');
-              @endphp
-              <div class="comment">
-                <div class="comment-head">
-                  <img class="comment-avatar" src="{{ $avatar }}" alt="">
-                  <div class="comment-name">{{ $c->user->name ?? 'ユーザー' }}</div>
-                </div>
-                <div class="comment-body">{{ $c->content }}</div>
-              </div>
-            @endforeach
-          @else
-            <div class="comment empty">まだコメントはありません。</div>
-          @endif
+
+{{-- コメント一覧 --}}
+<div class="show-section" id="comments">
+  <div class="sec-title">コメント（{{ $commentsCnt }}）</div>
+
+  <div class="comment-list">
+    @forelse($comments as $c)
+      @php
+        $avatar = optional($c->user->profile)->image_url ?? asset('images/placeholder.png');
+      @endphp
+      <div class="comment">
+        <div class="comment-head">
+          <img class="comment-avatar" src="{{ $avatar }}" alt="">
+          <div class="comment-name">{{ $c->user->name ?? 'ユーザー' }}</div>
         </div>
-
-        {{-- 入力 --}}
-        <div class="comment-form-title">商品へのコメント</div>
-
-        @auth
-          <form class="comment-form" method="POST" action="{{ route('items.comments.store', $item) }}">
-            @csrf
-            <textarea name="content"></textarea>
-            <button class="comment-btn" type="submit">コメントを送信する</button>
-          </form>
-        @else
-          {{-- 非ログインでも見た目は同じボタンでログインへ --}}
-          <form class="comment-form" method="GET" action="{{ route('login') }}">
-            <input type="hidden" name="intended" value="{{ url()->current() }}">
-            <textarea disabled></textarea>
-            <button class="comment-btn" type="submit" aria-disabled="true">コメントを送信する</button>
-          </form>
-        @endauth
+        <div class="comment-body">{{ $c->content }}</div>
       </div>
+    @empty
+      <div class="comment empty">まだコメントはありません。</div>
+    @endforelse
+  </div>
+
+  @php
+    // named error bag（comment）→ 無ければ default を参照
+    $err = $errors->getBag('comment');
+    if ($err->isEmpty()) {
+      $err = $errors->getBag('default');
+    }
+  @endphp
+
+  @auth
+    <form class="comment-form" method="POST" action="{{ route('items.comments.store', $item) }}" novalidate>
+      @csrf
+      <div class="form-group">
+        <label for="commentContent" class="form-label">商品へのコメント</label>
+        <textarea
+          id="commentContent"
+          name="content"
+          rows="4"
+          maxlength="255"
+          class="comment-textarea"
+          placeholder="この商品についてコメントする…"
+        >{{ old('content') }}</textarea>
+
+        @if ($err->has('content'))
+          <div class="error">{{ $err->first('content') }}</div>
+        @endif
+      </div>
+
+      <button class="comment-btn" type="submit">コメントを送信する</button>
+    </form>
+  @else
+    <form class="comment-form" method="GET" action="{{ route('login') }}">
+      <input type="hidden" name="intended" value="{{ url()->current() }}">
+      <textarea placeholder="コメントを書く（ログインが必要です）" disabled></textarea>
+      <button class="comment-btn" type="submit" aria-disabled="true">コメントを送信する</button>
+    </form>
+  @endauth
+</div>
+
+
+
     </div>
   </div>
 </div>

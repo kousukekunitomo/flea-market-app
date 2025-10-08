@@ -42,7 +42,8 @@ class ProfileController extends Controller
         );
 
         // ✅ マイリストタブを有効にして商品一覧へリダイレクト
-        return redirect()->route('items.index', ['tab' => 'mylist'])
-                         ->with('success', 'プロフィールを更新しました');
+        return redirect()
+            ->route('mypage.index')
+            ->with('success', 'プロフィールを更新しました。');
     }
 }

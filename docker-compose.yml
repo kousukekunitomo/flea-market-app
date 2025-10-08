@@ -1,3 +1,4 @@
+
 services:
   app:
     build:
@@ -6,9 +7,10 @@ services:
     container_name: flea-market-app
     volumes:
       - .:/var/www
-      - ./docker/php/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini:ro  # ← 追加（PHPのアップロード上限）
+      - ./docker/php/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini:ro
     depends_on:
       - db
+      - mailhog 
     networks:
       - flea-net
 
@@ -34,7 +36,7 @@ services:
       MYSQL_USER: laravel_user
       MYSQL_PASSWORD: secret
     ports:
-      - "3307:3306"   # ← ホスト側3307に変更（衝突回避）。不要なら ports を消してもOK
+      - "3307:3306"     # ← ホスト3307。コンテナ同士は db:3306 を使うので .env はそのままでOK
     volumes:
       - dbdata:/var/lib/mysql
     networks:
@@ -51,6 +53,15 @@ services:
       - "8080:80"
     depends_on:
       - db
+    networks:
+      - flea-net
+
+  mailhog:                # ← services 直下に独立させる
+    image: mailhog/mailhog:v1.0.1
+    container_name: flea-mailhog
+    ports:
+      - "1025:1025"      # SMTP
+      - "8025:8025"      # Web UI http://localhost:8025
     networks:
       - flea-net
 

@@ -8,14 +8,16 @@ class StoreItemCommentRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        // ルートが auth ミドルウェア配下なので true でOK
         return auth()->check();
     }
 
     public function rules(): array
     {
         return [
-            'content' => ['required', 'string', 'max:1000'],
+            // Fortifyの他ページと同様：デフォルトバッグで検証
+            'content' => ['required', 'min:1', 'max:255'],
+            // 空白のみを弾くなら ↓ を追加（任意）
+            // 'content' => ['required', 'min:1', 'max:255', 'not_regex:/^\s*$/u'],
         ];
     }
 
@@ -28,6 +30,14 @@ class StoreItemCommentRequest extends FormRequest
     {
         return [
             'content.required' => 'コメントを入力してください。',
+            'content.min'      => 'コメントを入力してください。',
+            'content.max'      => 'コメントは255文字以内で入力してください。',
         ];
+    }
+
+    // 失敗時はコメント欄へ戻す（Fortifyの見せ方に合わせつつUX向上）
+    protected function getRedirectUrl(): string
+    {
+        return url()->previous() . '#comments';
     }
 }
