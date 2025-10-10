@@ -142,9 +142,12 @@ class PurchaseController extends Controller
             return back()->with('error', 'この商品は売り切れです。');
         }
 
-        // UI の値（long/short 両対応）
+        // UI の値（long/short 両対応） + 配送先（nullableで受ける）
         $validated = $request->validate([
-            'pay_method' => 'required|in:credit_card,convenience_store,bank_transfer,card,konbini,bank',
+            'pay_method'             => 'required|in:credit_card,convenience_store,bank_transfer,card,konbini,bank',
+            'delivery_postal_code'   => 'nullable|string|max:16',
+            'delivery_address'       => 'nullable|string|max:255',
+            'delivery_building_name' => 'nullable|string|max:255',
         ]);
 
         $method = $validated['pay_method'];
@@ -166,25 +169,29 @@ class PurchaseController extends Controller
             'quantity' => 1,
         ]];
 
+        // 配送先（request → session → プロフィール の順で補完）
+        $user = auth()->user()->load('profile');
+        $delivery = [
+            'delivery_postal_code'   => $this->normalizePostal((string) ($validated['delivery_postal_code'] ?? session('delivery.delivery_postal_code', optional($user->profile)->postal_code ?? ''))),
+            'delivery_address'       => (string) ($validated['delivery_address'] ?? session('delivery.delivery_address', optional($user->profile)->address ?? '')),
+            'delivery_building_name' => (string) ($validated['delivery_building_name'] ?? session('delivery.delivery_building_name', optional($user->profile)->building_name ?? '')),
+        ];
+
         // Checkout 本体 + PaymentIntent の両方に metadata（重要）
+        $baseMeta = array_merge([
+            'item_id'    => (string) $item->id,
+            'user_id'    => (string) auth()->id(),
+            'pay_method' => $normalized, // card/konbini/bank
+        ], $delivery);
+
         $params = [
             'mode'        => 'payment',
             'line_items'  => $lineItems,
             'success_url' => route('purchase.success') . '?item=' . $item->id . '&session_id={CHECKOUT_SESSION_ID}',
             'cancel_url'  => route('items.show', $item) . '?result=cancel',
 
-            'metadata' => [
-                'item_id'    => (string) $item->id,
-                'user_id'    => (string) auth()->id(),
-                'pay_method' => $normalized, // card/konbini/bank
-            ],
-            'payment_intent_data' => [
-                'metadata' => [
-                    'item_id'    => (string) $item->id,
-                    'user_id'    => (string) auth()->id(),
-                    'pay_method' => $normalized,
-                ],
-            ],
+            'metadata'             => $baseMeta,
+            'payment_intent_data'  => ['metadata' => $baseMeta],
         ];
 
         if ($normalized === 'card') {
@@ -226,14 +233,15 @@ class PurchaseController extends Controller
      */
     public function success(Request $request)
     {
+        // 一時配送先をクリア（任意）
+        session()->forget(['delivery', 'delivery_item_id']);
+
         return redirect()
             ->route('items.index')
             ->with('status', 'お支払い手続きが開始されました。入金確認後に購入が確定します。');
     }
 
-    /**
-     * 郵便番号を 123-4567 に整形
-     */
+    /** 郵便番号を 123-4567 に整形 */
     private function normalizePostal(string $value): string
     {
         $digits = preg_replace('/\D/', '', $value);

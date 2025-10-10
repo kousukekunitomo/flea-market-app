@@ -14,4 +14,4 @@ return new class extends Migration {
     try { DB::statement("ALTER TABLE `comments` DROP CHECK `chk_comments_content_len`"); } catch (\Throwable $e) {}
   }
 };
-};
+

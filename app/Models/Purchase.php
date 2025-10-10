@@ -7,9 +7,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Purchase extends Model
 {
-    /**
-     * 受け付けるカラムを明示（$guarded=[] は削除）
-     */
     protected $fillable = [
         'user_id',
         'item_id',
@@ -18,14 +15,20 @@ class Purchase extends Model
         'quantity',
         'shipping_fee',
         'total',
+        'stripe_payment_id',
+
+        // ▼ 注文ごとの配送先（今回の主役）
+        'delivery_postal_code',
+        'delivery_address',
+        'delivery_building_name',
+
+        // ▼ 互換（テーブルに残っている場合のみ使われます）
         'postal_code',
         'address',
         'building_name',
+        'delivery_building', // 誤名が残っている場合の互換
     ];
 
-    /**
-     * 型キャスト（数値系を整数に）
-     */
     protected $casts = [
         'user_id'      => 'int',
         'item_id'      => 'int',
@@ -35,17 +38,11 @@ class Purchase extends Model
         'total'        => 'int',
     ];
 
-    /**
-     * ユーザー
-     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(\App\Models\User::class);
     }
 
-    /**
-     * 商品
-     */
     public function item(): BelongsTo
     {
         return $this->belongsTo(\App\Models\Item::class);
