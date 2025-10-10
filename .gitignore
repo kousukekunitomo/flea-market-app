@@ -22,3 +22,24 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+# === Laravel runtime (追加) ===
+/storage/logs/*
+!/storage/logs/.gitignore
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/testing/*
+/storage/framework/views/*
+!/storage/framework/.gitignore
+/storage/app/public/*
+!/storage/app/public/.gitignore
+
+# env バリエーション（追加）
+.env.*
+!.env.example
+
+# エディタ/一時ファイル（追加）
+*.swp
+*.swm
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
