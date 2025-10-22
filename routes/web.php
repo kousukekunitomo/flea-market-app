@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\Auth\LoginChallengeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\MyPageController;
@@ -12,12 +11,13 @@ use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\AddressController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
-use App\Http\Controllers\StripeWebhookController;
-use App\Http\Middleware\VerifyCsrfToken;
 
-// ===== 初回メール認証 =====
+/* ============================
+ * 初回メール認証（登録時のみ）
+ * ============================ */
 Route::get('/email/verify', fn () => view('auth.verify-email'))
-    ->middleware('auth')->name('verification.notice');
+    ->middleware('auth')
+    ->name('verification.notice');
 
 Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
     $request->fulfill();
@@ -33,7 +33,7 @@ Route::post('/email/verification-notification', function (Request $request) {
     return back()->with('status', '認証メールを再送しました。');
 })->middleware(['auth','throttle:6,1'])->name('verification.send');
 
-// ===== 公開 =====
+/* ===== 公開 ===== */
 Route::get('/', fn () => view('welcome'));
 Route::get('/login',  [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->middleware('throttle:6,1')->name('login');
@@ -43,12 +43,7 @@ Route::get('/items',        [ItemController::class, 'index'])->name('items.index
 Route::get('/items/{item}', [ItemController::class, 'show'])->name('items.show');
 Route::get('/purchase/success', [PurchaseController::class, 'success'])->name('purchase.success');
 
-// ===== 毎回のメール承認（ワンタイムリンク） =====
-Route::get('/login/challenge/sent',   [LoginChallengeController::class, 'sent'])->name('login.challenge.sent');
-Route::get('/login/challenge/verify', [LoginChallengeController::class, 'verify'])->middleware('signed')->name('login.challenge.verify');
-Route::post('/login/challenge/resend',[LoginChallengeController::class, 'resend'])->middleware('throttle:6,1')->name('login.challenge.resend');
-
-// ===== 認証が必要 =====
+/* ===== 認証＋verified 必須の領域 ===== */
 Route::middleware(['auth', 'verified'])->group(function () {
     // プロフィール
     Route::get('/profile/edit',    [ProfileController::class, 'edit'])->name('profile.edit');
@@ -68,15 +63,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/items/{item}/comments', [ItemCommentController::class, 'store'])->name('items.comments.store');
 
     // 購入
-    Route::get ('/items/{item}/buy', [PurchaseController::class, 'show'])->name('purchase.show');
-    Route::post('/items/{item}/buy', [PurchaseController::class, 'store'])->name('purchase.store');
-    Route::post('/items/{item}/checkout', [PurchaseController::class, 'checkout'])->name('purchase.checkout');
+    Route::get ('/items/{item}/buy',     [PurchaseController::class, 'show'])->name('purchase.show');
+    Route::post('/items/{item}/buy',     [PurchaseController::class, 'store'])->name('purchase.store');
+    Route::post('/items/{item}/checkout',[PurchaseController::class, 'checkout'])->name('purchase.checkout');
 
     // 住所編集
     Route::get ('/items/{item}/address/edit', [AddressController::class, 'edit'])->name('address.edit');
     Route::post('/items/{item}/address',      [AddressController::class, 'update'])->name('address.update');
 });
-
-Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle'])
-    ->withoutMiddleware([VerifyCsrfToken::class])
-    ->name('stripe.webhook.web');

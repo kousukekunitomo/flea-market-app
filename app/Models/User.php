@@ -3,16 +3,16 @@
 namespace App\Models;
 
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Auth\MustVerifyEmail as MustVerifyEmailTrait; // トレイト
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-// Eloquent relation types
+// Relations
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-// Related models
 use App\Models\Profile;
 use App\Models\Item;
 use App\Models\Purchase;
@@ -22,11 +22,12 @@ class User extends Authenticatable implements MustVerifyEmail
 {
     use HasFactory, Notifiable;
 
-    /**
-     * Mass assignable attributes.
-     *
-     * Add 'stripe_customer_id' if you sometimes update it via fill/update().
-     */
+    // トレイトの元メソッドに別名を付けて呼べるようにする
+    use MustVerifyEmailTrait {
+        sendEmailVerificationNotification as protected sendEmailVerificationNotificationFromTrait;
+    }
+
+    /** Mass assignable attributes */
     protected $fillable = [
         'name',
         'email',
@@ -34,17 +35,13 @@ class User extends Authenticatable implements MustVerifyEmail
         'stripe_customer_id',
     ];
 
-    /**
-     * Attributes that should be hidden for arrays.
-     */
+    /** Hidden attributes */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Attribute casting.
-     */
+    /** Casts */
     protected function casts(): array
     {
         return [
@@ -53,63 +50,74 @@ class User extends Authenticatable implements MustVerifyEmail
         ];
     }
 
-    /**
-     * Profile (1:1)
-     */
+    /* ================= Relations ================= */
+
     public function profile(): HasOne
     {
         return $this->hasOne(Profile::class);
     }
 
-    /**
-     * Items the user listed (1:N)
-     */
     public function items(): HasMany
     {
         return $this->hasMany(Item::class);
     }
 
-    /**
-     * Purchases (history records) (1:N)
-     */
     public function purchases(): HasMany
     {
         return $this->hasMany(Purchase::class);
     }
 
-    /**
-     * Items the user purchased (through purchases pivot)
-     */
     public function purchasedItems(): BelongsToMany
     {
-        // If the purchases table does NOT have timestamps, remove ->withTimestamps()
         return $this->belongsToMany(Item::class, 'purchases', 'user_id', 'item_id')
                     ->withTimestamps();
     }
 
-    /**
-     * Items the user liked (through likes pivot)
-     */
     public function likedItems(): BelongsToMany
     {
         return $this->belongsToMany(Item::class, 'likes', 'user_id', 'item_id');
     }
 
-    /**
-     * Comments the user posted (1:N)
-     */
     public function comments(): HasMany
     {
         return $this->hasMany(Comment::class);
     }
 
-    /**
-     * Helper: whether the user liked a given item
-     */
     public function hasLiked(Item $item): bool
     {
-        return $this->likedItems()
-            ->where('items.id', $item->id)
-            ->exists();
+        return $this->likedItems()->where('items.id', $item->id)->exists();
+    }
+
+    /* ============== 認証メール送信（重複ガード付き） ============== */
+
+    /**
+     * 送信をこの HTTP リクエスト内で一度に限定し、ログも出す
+     */
+    public function sendEmailVerificationNotification()
+    {
+        // リクエスト内重複ガード
+        $key = 'verification.mail.sent.user_id';
+        $container = app();
+
+        if ($container->bound($key) && (int) $container->make($key) === (int) $this->id) {
+            \Log::info('DBG sendEmailVerificationNotification:skipped-duplicate', [
+                'user_id' => $this->id,
+                'email'   => $this->email,
+                'time'    => microtime(true),
+            ]);
+            return; // 2回目は送らない
+        }
+
+        // フラグセット（このリクエスト中は2回目以降スキップ）
+        $container->instance($key, (int) $this->id);
+
+        \Log::info('DBG sendEmailVerificationNotification:called', [
+            'user_id' => $this->id,
+            'email'   => $this->email,
+            'time'    => microtime(true),
+        ]);
+
+        // トレイトの既定実装で実際に送信
+        return $this->sendEmailVerificationNotificationFromTrait();
     }
 }
