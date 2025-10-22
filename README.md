@@ -24,5 +24,5 @@
 ## ER Diagram
 
 <p align="center">
-  <img src="public/images/er-diagram.png" alt="ER Diagram of flea-market-app" width="720">
+  <img src="public/images/er-diagram-flea-2025-10.png" alt="ER Diagram of flea-market-app" width="720">
 </p>
