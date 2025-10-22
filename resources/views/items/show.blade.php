@@ -163,34 +163,46 @@
     }
   @endphp
 
-  @auth
-    <form class="comment-form" method="POST" action="{{ route('items.comments.store', $item) }}" novalidate>
-      @csrf
-      <div class="form-group">
-        <label for="commentContent" class="form-label">商品へのコメント</label>
-        <textarea
-          id="commentContent"
-          name="content"
-          rows="4"
-          maxlength="255"
-          class="comment-textarea"
-          placeholder="この商品についてコメントする…"
-        >{{ old('content') }}</textarea>
+  {{-- コメント投稿フォーム --}}
+@auth
+  <form class="comment-form" method="POST" action="{{ route('items.comments.store', $item) }}" novalidate>
+    @csrf
+    <div class="form-group">
+      <label for="commentContent" class="form-label">商品へのコメント</label>
 
-        @if ($err->has('content'))
-          <div class="error">{{ $err->first('content') }}</div>
-        @endif
-      </div>
+      {{-- ★ maxlength を外す（>255 でも送れて、サーバ側で弾かれる） --}}
+      <textarea
+        id="commentContent"
+        name="content"
+        rows="4"
+        class="comment-textarea @error('content') is-error @enderror"
+        placeholder="この商品についてコメントする…"
+      >{{ old('content') }}</textarea>
 
-      <button class="comment-btn" type="submit">コメントを送信する</button>
-    </form>
-  @else
-    <form class="comment-form" method="GET" action="{{ route('login') }}">
-      <input type="hidden" name="intended" value="{{ url()->current() }}">
-      <textarea placeholder="コメントを書く（ログインが必要です）" disabled></textarea>
-      <button class="comment-btn" type="submit" aria-disabled="true">コメントを送信する</button>
-    </form>
-  @endauth
+      {{-- サーバ側バリデーションのエラーメッセージを表示 --}}
+      @php
+        // まず named bag "comment" を見る → 無ければ default
+        $errBag = $errors->getBag('comment');
+        if ($errBag->isEmpty()) $errBag = $errors->getBag('default');
+      @endphp
+      @if ($errBag->has('content'))
+        <div class="error">{{ $errBag->first('content') }}</div>
+      @else
+        {{-- 任意：ガイド表示（クライアント側はあくまで補助） --}}
+        
+      @endif
+    </div>
+
+    <button class="comment-btn" type="submit">コメントを送信する</button>
+  </form>
+@else
+  <form class="comment-form" method="GET" action="{{ route('login') }}">
+    <input type="hidden" name="intended" value="{{ url()->current() }}">
+    <textarea placeholder="コメントを書く（ログインが必要です）" disabled></textarea>
+    <button class="comment-btn" type="submit" aria-disabled="true">コメントを送信する</button>
+  </form>
+@endauth
+
 </div>
 
 

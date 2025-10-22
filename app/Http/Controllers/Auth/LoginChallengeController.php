@@ -13,7 +13,7 @@ use Illuminate\Support\Str;
 
 class LoginChallengeController extends Controller
 {
-    /** 「メール送ったよ」画面（未ログインで閲覧可） */
+    /** 「メール送信」画面（未ログインで閲覧可） */
     public function sent(Request $request)
     {
         return view('auth.login-challenge-sent');

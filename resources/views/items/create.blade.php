@@ -122,7 +122,7 @@
           class="form-input"
           value="{{ old('price') }}"
           inputmode="numeric"
-          min="1"
+          min="0"
           step="1">
       </div>
       @if ($bag->has('price'))
