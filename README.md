@@ -5,6 +5,7 @@
 - `cd flea-market-app`
 - `docker compose up -d --build`
 
+
 ### Laravel環境構築
 - `docker compose exec app bash`
 - `composer install`
@@ -21,8 +22,18 @@
 - `MailHog: http://localhost:8025`
 - `phpMyAdmin: http://localhost:8080`
 
-## ER Diagram
 
+### Stripe (dev)
+1) `stripe listen --forward-to http://localhost:8000/api/stripe/webhook`
+2) 出力された Signing secret を `.env` の `STRIPE_WEBHOOK_SECRET` に設定
+3) `php artisan config:clear`
+
+
+## Demo Login
+- Email: `admin@example.com`
+- Password: `mmmmmmmm`
+
+## ER Diagram
 <p align="center">
   <img src="public/images/er-diagram-flea-2025-10.png" alt="ER Diagram of flea-market-app" width="720">
 </p>
