@@ -22,26 +22,23 @@ class User extends Authenticatable implements MustVerifyEmail
 {
     use HasFactory, Notifiable;
 
-    // トレイトの元メソッドに別名を付けて呼べるようにする
     use MustVerifyEmailTrait {
         sendEmailVerificationNotification as protected sendEmailVerificationNotificationFromTrait;
     }
 
-    /** Mass assignable attributes */
     protected $fillable = [
         'name',
         'email',
         'password',
         'stripe_customer_id',
+        'needs_profile_setup',
     ];
 
-    /** Hidden attributes */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /** Casts */
     protected function casts(): array
     {
         return [
@@ -90,12 +87,8 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /* ============== 認証メール送信（重複ガード付き） ============== */
 
-    /**
-     * 送信をこの HTTP リクエスト内で一度に限定し、ログも出す
-     */
     public function sendEmailVerificationNotification()
     {
-        // リクエスト内重複ガード
         $key = 'verification.mail.sent.user_id';
         $container = app();
 
@@ -108,7 +101,6 @@ class User extends Authenticatable implements MustVerifyEmail
             return; // 2回目は送らない
         }
 
-        // フラグセット（このリクエスト中は2回目以降スキップ）
         $container->instance($key, (int) $this->id);
 
         \Log::info('DBG sendEmailVerificationNotification:called', [
@@ -117,7 +109,6 @@ class User extends Authenticatable implements MustVerifyEmail
             'time'    => microtime(true),
         ]);
 
-        // トレイトの既定実装で実際に送信
         return $this->sendEmailVerificationNotificationFromTrait();
     }
 }

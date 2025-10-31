@@ -41,7 +41,21 @@ class ProfileController extends Controller
             $profileData
         );
 
-        // ✅ マイリストタブを有効にして商品一覧へリダイレクト
+        // --- 初回判定（セッション or DB） ---
+        $afterRegister = $request->session()->pull('after_register', false);
+
+        $wasSetupNeeded = (bool) ($user->needs_profile_setup ?? false);
+        if ($wasSetupNeeded) {
+            $user->forceFill(['needs_profile_setup' => false])->save();
+        }
+
+        if ($afterRegister || $wasSetupNeeded) {
+            return redirect()
+                ->route('items.index')
+                ->with('success', 'プロフィールを更新しました。');
+        }
+
+        // 通常時はマイページへ
         return redirect()
             ->route('mypage.index')
             ->with('success', 'プロフィールを更新しました。');

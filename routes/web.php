@@ -21,8 +21,17 @@ Route::get('/email/verify', fn () => view('auth.verify-email'))
 
 Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
     $request->fulfill();
-    $route = $request->session()->pull('after_register') ? 'profile.edit' : 'items.index';
-    return redirect()->route($route)->with('status', 'メール認証が完了しました。');
+
+    $user = $request->user();
+
+    // セッション or DB のどちらかに初回フラグがあればプロフィール編集へ
+    $fromSession = (bool) $request->session()->pull('after_register', false);
+    $fromDb      = (bool) ($user->needs_profile_setup ?? false);
+    $goProfile   = $fromSession || $fromDb;
+
+    return redirect()
+        ->route($goProfile ? 'profile.edit' : 'items.index')
+        ->with('status', 'メール認証が完了しました。');
 })->middleware(['auth','signed'])->name('verification.verify');
 
 Route::post('/email/verification-notification', function (Request $request) {
@@ -39,7 +48,7 @@ Route::get('/login',  [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->middleware('throttle:6,1')->name('login');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-Route::get('/items',        [ItemController::class, 'index'])->name('items.index');
+Route::get('/items', [ItemController::class, 'index'])->name('items.index');
 Route::get('/items/{item}', [ItemController::class, 'show'])->name('items.show');
 Route::get('/purchase/success', [PurchaseController::class, 'success'])->name('purchase.success');
 
