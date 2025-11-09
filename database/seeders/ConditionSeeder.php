@@ -10,10 +10,10 @@ class ConditionSeeder extends Seeder
     public function run(): void
     {
         $conditions = [
-            ['condition' => '新品'],
-            ['condition' => 'ほぼ新品'],
             ['condition' => '良好'],
-            ['condition' => '使用感あり'],
+            ['condition' => '目立った傷や汚れなし'],
+            ['condition' => 'やや傷や汚れあり'],
+            ['condition' => '状態が悪い'],
         ];
 
         DB::table('conditions')->insert($conditions);
