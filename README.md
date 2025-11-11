@@ -37,3 +37,20 @@
 <p align="center">
   <img src="public/images/er-diagram-flea-2025-10.png" alt="ER Diagram of flea-market-app" width="720">
 </p>
+
+## Running Feature Tests (SQLite)
+
+The test suite for `--env=testing` uses **SQLite**, so MySQL is not required.
+
+### 1) One-time setup
+```bash
+mkdir -p database
+[ -f database/testing.sqlite ] || : > database/testing.sqlite
+
+cat > .env.testing <<'EOF'
+APP_ENV=testing
+APP_KEY=base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+APP_DEBUG=true
+DB_CONNECTION=sqlite
+DB_DATABASE=database/testing.sqlite
+EOF
