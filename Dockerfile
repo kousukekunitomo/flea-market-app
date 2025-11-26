@@ -10,3 +10,4 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # 作業ディレクトリの設定
 WORKDIR /var/www
+

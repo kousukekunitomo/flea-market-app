@@ -10,7 +10,13 @@ services:
       - ./docker/php/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini:ro
     depends_on:
       - db
-      - mailhog 
+      - mailhog
+    command: >
+      bash -c "
+        chown -R www-data:www-data storage bootstrap/cache &&
+        chmod -R 775 storage bootstrap/cache &&
+        php-fpm
+      "
     networks:
       - flea-net
 
